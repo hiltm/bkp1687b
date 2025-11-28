@@ -45,6 +45,13 @@ def format_number(num):
         num = int(num)
     return f"{int(round(num*10)):03d}"  # zero pad to 3 digits
 
+def format_display_values(num):
+    # convert to a float then with the desired decimal point
+    if len(num) > 2:
+        return float(num[:len(num)-2] + '.' + num[-2:])
+    else:
+        return float('0.' + num)
+
 def set_voltage(power_supply, voltage):
     # send the command to set the voltage
     formatted_voltage = format_number(voltage)
@@ -60,6 +67,21 @@ def set_current(power_supply, current):
     response = send_command(power_supply, command)
     if response:
         print(f"Current set to: {current} A")
+
+def get_voltage_and_current(power_supply):
+    # send the command to get power supply display voltage and current
+    command = f"GETD"
+    response = send_command(power_supply, command)
+    # split the returned value into voltage and current
+    voltage = response[:4]
+    current = response[4:]
+    voltage = format_display_values(voltage)
+    current = format_display_values(current)
+    if response:
+        #if "OK" in response:
+        #    time.sleep(1)
+        print(f"     Voltage reading is: {voltage} V")
+        print(f"     Current reading is: {current} A")
 
 def turn_output_on(power_supply):
     # turn on the output, 0 is on
