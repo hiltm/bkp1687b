@@ -7,6 +7,8 @@
 import serial
 import time
 
+verbose_mode = True
+
 serial_port = '/dev/ttyUSB0'  # specify serial connection to power supply
 
 # open the serial connection
@@ -14,7 +16,7 @@ def connect_power_supply():
     try:
         # set up the serial connection
         power_supply = serial.Serial(serial_port, baudrate=9600, timeout=1)
-        print(f"Successfully connected to power supply on {serial_port}.")
+        if verbose_mode: print(f"Successfully connected to power supply on {serial_port}.")
         return power_supply
     except Exception as e:
         print(f"Error connecting to the power supply: {e}")
@@ -34,7 +36,7 @@ def send_command(power_supply, command):
 def query_device_id(power_supply):
     response = send_command(power_supply, '*IDN?')
     if response:
-        print(f"Device Response: {response}")
+        if rebose_mode: print(f"Device Response: {response}")
 
 def format_number(num):
     # this function can take in either 8 or 8.0 or 8.5 and return 008 or 008 or 085
@@ -62,7 +64,7 @@ def set_voltage(power_supply, voltage):
     command = f"VOLT{formatted_voltage}"
     response = send_command(power_supply, command)
     if response:
-        print(f"Voltage set to: {voltage} V")
+        if verbose_mode: print(f"Voltage set to: {voltage} V")
 
 def set_current(power_supply, current):
     # send the command to set the current
@@ -70,7 +72,7 @@ def set_current(power_supply, current):
     command = f"CURR{formatted_current}"
     response = send_command(power_supply, command)
     if response:
-        print(f"Current set to: {current} A")
+        if verbose_mode: print(f"Current set to: {current} A")
 
 def get_voltage_and_current(power_supply):
     max_retries = 5
@@ -92,30 +94,30 @@ def get_voltage_and_current(power_supply):
         current = response[4:]
         voltage = format_display_values(voltage)
         current = format_display_values(current)
-        if response:
+        if verbose_mode & response:
             print(f"     Voltage reading is: {voltage} V")
             print(f"     Current reading is: {current} A")
             return voltage,current
         else:
-            print("Error: invalid response format")
+            if verbose_mode: print("Error: invalid response format")
             #print(f"No display voltage and current read")
             #return None,None
         retries += 1
         time.sleep(1)
-    print(f"failed to get valid voltage and current from power supply")
+    if verbose_mode: print(f"failed to get valid voltage and current from power supply")
     return None,None
 
 def turn_output_on(power_supply):
     # turn on the output, 0 is on
     command = f"SOUT0"
     response = send_command(power_supply, command)
-    print("Output turned ON.", response)
+    if verbose_mode: print("Output turned ON.", response)
 
 def turn_output_off(power_supply):
     # turn off the output, 1 is off
     command = f"SOUT1"
     response = send_command(power_supply, command)
-    print("Output turned OFF.", response)
+    if verbose_mode: print("Output turned OFF.", response)
 
 def main():
     # connect to the power supply
