@@ -73,24 +73,37 @@ def set_current(power_supply, current):
         print(f"Current set to: {current} A")
 
 def get_voltage_and_current(power_supply):
-    # send the command to get power supply display voltage and current
-    command = f"GETD"
-    response = send_command(power_supply, command)
+    max_retries = 5
+    retries = 0
 
-    # handle the "OK" sent in response to the command after the values
-    lines = response.split('\r') # split based on CR
-    if len(lines) > 1:
-        # first line is the voltage and current data, second line is OK
-        # which we can ignore OK
-        response = lines[0]
-    # split the returned value into voltage and current
-    voltage = response[:4]
-    current = response[4:]
-    voltage = format_display_values(voltage)
-    current = format_display_values(current)
-    if response:
-        print(f"     Voltage reading is: {voltage} V")
-        print(f"     Current reading is: {current} A")
+    while retries < max_retries:
+        # send the command to get power supply display voltage and current
+        command = f"GETD"
+        response = send_command(power_supply, command)
+
+        # handle the "OK" sent in response to the command after the values
+        lines = response.split('\r') # split based on CR
+        if len(lines) > 1:
+            # first line is the voltage and current data, second line is OK
+            # which we can ignore OK
+            response = lines[0]
+        # split the returned value into voltage and current
+        voltage = response[:4]
+        current = response[4:]
+        voltage = format_display_values(voltage)
+        current = format_display_values(current)
+        if response:
+            print(f"     Voltage reading is: {voltage} V")
+            print(f"     Current reading is: {current} A")
+            return voltage,current
+        else:
+            print("Error: invalid response format")
+            #print(f"No display voltage and current read")
+            #return None,None
+        retries += 1
+        time.sleep(1)
+    print(f"failed to get valid voltage and current from power supply")
+    return None,None
 
 def turn_output_on(power_supply):
     # turn on the output, 0 is on
