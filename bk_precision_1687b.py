@@ -2,9 +2,7 @@
 # connection is 9600 8N1 BAUD
 
 # todos
-# log control and outputs to a file
 # strengthen looping logic for automation testing
-# read voltage and current from power supply
 
 import serial
 import time
@@ -47,10 +45,16 @@ def format_number(num):
 
 def format_display_values(num):
     # convert to a float then with the desired decimal point
-    if len(num) > 2:
+    if len(num) == 4:
+        # format voltage
         return float(num[:len(num)-2] + '.' + num[-2:])
     else:
-        return float('0.' + num)
+        # format current
+        num = str(num).zfill(5) # zero pad to ensure it's 5 digits
+        integer_part = num[:1] # first two digits are integer
+        fractional_part = num[2:] # last three digits are fractional
+        return float(f"{integer_part}.{fractional_part[:3]}")
+        #return float(num[:len(num)-3] + '.' + num[-3:])
 
 def set_voltage(power_supply, voltage):
     # send the command to set the voltage
@@ -72,14 +76,19 @@ def get_voltage_and_current(power_supply):
     # send the command to get power supply display voltage and current
     command = f"GETD"
     response = send_command(power_supply, command)
+
+    # handle the "OK" sent in response to the command after the values
+    lines = response.split('\r') # split based on CR
+    if len(lines) > 1:
+        # first line is the voltage and current data, second line is OK
+        # which we can ignore OK
+        response = lines[0]
     # split the returned value into voltage and current
     voltage = response[:4]
     current = response[4:]
     voltage = format_display_values(voltage)
     current = format_display_values(current)
     if response:
-        #if "OK" in response:
-        #    time.sleep(1)
         print(f"     Voltage reading is: {voltage} V")
         print(f"     Current reading is: {current} A")
 
