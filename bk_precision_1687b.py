@@ -23,15 +23,23 @@ def connect_power_supply():
         return None
 
 def send_command(power_supply, command):
-    """ Send a command to the power supply and wait for a response """
-    try:
-        power_supply.write(f'{command}\r\n'.encode())
-        time.sleep(0.1)  # wait for the command to be processed
-        response = power_supply.readline().decode().strip()  # read the response
-        return response
-    except Exception as e:
-        print(f"Error sending command: {e}")
-        return None
+    max_retries = 5
+    retries = 0
+
+    while retries < max_retries:
+        """ Send a command to the power supply and wait for a response """
+        try:
+            power_supply.write(f'{command}\r\n'.encode())
+            time.sleep(0.1)  # wait for the command to be processed
+            response = power_supply.readline().decode().strip()  # read the response
+            return response
+        except Exception as e:
+            print(f"Error sending command: {e}")
+            return None
+        retries += 1
+        time.sleep(1)
+    if verbose_mode: print("failed to send command")
+    return None
 
 def query_device_id(power_supply):
     response = send_command(power_supply, '*IDN?')
@@ -94,7 +102,8 @@ def get_voltage_and_current(power_supply):
         current = response[4:]
         voltage = format_display_values(voltage)
         current = format_display_values(current)
-        if verbose_mode & response:
+        time.sleep(1)
+        if verbose_mode:
             print(f"     Voltage reading is: {voltage} V")
             print(f"     Current reading is: {current} A")
             return voltage,current
@@ -136,4 +145,4 @@ def main():
         # turn the output OFF
         turn_output_off(power_supply)
 
-main()
+#main()
